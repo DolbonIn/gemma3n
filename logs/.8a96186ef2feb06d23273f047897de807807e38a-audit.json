@@ -1,0 +1,15 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 14
+    },
+    "auditLog": "/mnt/c/Users/new/Downloads/gemma3n/logs/.8a96186ef2feb06d23273f047897de807807e38a-audit.json",
+    "files": [
+        {
+            "date": 1752209394348,
+            "name": "/mnt/c/Users/new/Downloads/gemma3n/logs/mcp-puppeteer-2025-07-11.log",
+            "hash": "a771f167bbed31ea6a07e778c240663e9996940cc328bb16cb58040e91836501"
+        }
+    ],
+    "hashType": "sha256"
+}
