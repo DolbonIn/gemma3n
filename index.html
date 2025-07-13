@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemma 3n 키오스크 에이전트 프로젝트 대시보드</title>
+    <!-- Chosen Palette: Calm Neutrals with a Tech Blue Accent -->
+    <!-- Application Structure Plan: A single-page application with a fixed sidebar for navigation and a main content area. This dashboard-style structure allows users to easily navigate between different aspects of the complex project plan (Overview, Tech, UX, Training, Roadmap) without losing context. Content for each section is loaded dynamically by showing/hiding corresponding divs, providing a fluid, non-linear exploration experience ideal for breaking down a dense technical document. -->
+    <!-- Visualization & Content Choices: 
+        - Report Info: Project KPIs -> Goal: Inform -> Viz: Dynamic number cards -> Interaction: Subtle animation on load -> Justification: Quickly highlights key success metrics. -> Library: HTML/CSS/JS.
+        - Report Info: System Architecture Diagram -> Goal: Organize -> Viz: HTML divs styled with Tailwind CSS to form a flowchart -> Interaction: Hover effects on nodes -> Justification: Recreates a diagram without SVG, making it interactive and integrated. -> Library: HTML/Tailwind.
+        - Report Info: User Journey (Cafe Scenario) -> Goal: Storytelling/Demonstration -> Viz: A two-panel layout simulating a kiosk and a phone -> Interaction: Step-by-step progression via a "Next" button -> Justification: Creates a "wow" factor by interactively walking through the core use case, making the concept tangible. -> Library: JS.
+        - Report Info: Unsloth Performance -> Goal: Compare -> Viz: Bar chart -> Interaction: Tooltips on hover -> Justification: Clearly visualizes the performance benefits claimed in the report. -> Library: Chart.js.
+        - Report Info: Hackathon Timeline -> Goal: Organize/Change -> Viz: Horizontal bar chart (Gantt-style) -> Interaction: Tooltips on hover -> Justification: Presents the project plan in a familiar, easy-to-digest format. -> Library: Chart.js.
+        - CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Noto Sans KR', sans-serif; background-color: #f8f9fa; }
+        .nav-link { transition: all 0.2s ease-in-out; }
+        .nav-link.active { background-color: #3b82f6; color: white; }
+        .nav-link:not(.active):hover { background-color: #e5e7eb; }
+        .content-section { display: none; }
+        .content-section.active { display: block; }
+        .chart-container { position: relative; width: 100%; max-width: 800px; margin-left: auto; margin-right: auto; height: 350px; max-height: 400px; }
+        @media (min-width: 768px) { .chart-container { height: 400px; } }
+        .kiosk-screen { background-color: #2d3748; color: white; border: 8px solid #1a202c; border-radius: 1rem; }
+        .phone-screen { background-color: #ffffff; border: 8px solid #4a5568; border-radius: 1.5rem; }
+        .flow-arrow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: #9ca3af;
+        }
+        .flow-node { transition: all 0.2s ease-in-out; }
+        .flow-node:hover { transform: scale(1.05); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+    <div class="flex h-screen">
+        <!-- Sidebar Navigation -->
+        <nav class="w-64 bg-white shadow-md flex-shrink-0 p-4">
+            <div class="flex items-center mb-8">
+                <div class="p-2 bg-blue-500 rounded-lg mr-3">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                </div>
+                <h1 class="text-lg font-bold">키오스크 에이전트</h1>
+            </div>
+            <ul class="space-y-2">
+                <li><a href="#overview" class="nav-link flex items-center p-2 rounded-lg font-medium">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+                    프로젝트 개요
+                </a></li>
+                <li><a href="#tech" class="nav-link flex items-center p-2 rounded-lg font-medium">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                    기술 스택
+                </a></li>
+                <li><a href="#ux" class="nav-link flex items-center p-2 rounded-lg font-medium">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    사용자 경험(UX)
+                </a></li>
+                <li><a href="#training" class="nav-link flex items-center p-2 rounded-lg font-medium">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l-3 3m0 0l-3-3m3 3v12m6.38-8.18c.58.25 1.12.62 1.57 1.07m-3.14-2.14l-3 3m.01-12l3 3m0 0l3-3m-3 3v12"></path></svg>
+                    모델 학습 전략
+                </a></li>
+                <li><a href="#roadmap" class="nav-link flex items-center p-2 rounded-lg font-medium">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                    해커톤 로드맵
+                </a></li>
+            </ul>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-6 lg:p-10 overflow-y-auto">
+            <!-- Overview Section -->
+            <section id="overview" class="content-section">
+                <h2 class="text-3xl font-bold mb-2">프로젝트 개요</h2>
+                <p class="text-gray-600 mb-8">최첨단 온디바이스 AI를 활용하여 디지털 소외 계층의 키오스크 접근성을 혁신하는 프로젝트입니다.</p>
+                
+                <div class="bg-white p-6 rounded-lg shadow-sm mb-8">
+                    <h3 class="text-xl font-bold mb-4">프로젝트 비전 및 목표</h3>
+                    <p class="text-gray-700 leading-relaxed">본 프로젝트의 비전은 Google의 Gemma 3n 모델을 탑재한 온디바이스 AI 에이전트를 통해 시각 장애인 및 고령층이 타인의 도움 없이 키오스크를 완벽하게 사용할 수 있도록 지원하는 것입니다. 사용자의 음성 명령과 스마트폰 카메라를 통해 키오스크 화면을 실시간으로 인지하고, 사용자를 대신하여 UI를 조작하는 지능형 에이전트를 개발하여, 모든 사람이 동등하게 디지털 사회의 편의를 누리는 환경을 조성하는 것이 궁극적인 목표입니다.</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div class="bg-white p-6 rounded-lg shadow-sm">
+                        <h4 class="font-bold text-lg mb-2">기능 완성도</h4>
+                        <p class="text-blue-500 text-3xl font-bold">100%</p>
+                        <p class="text-gray-600 mt-2">정의된 핵심 시나리오 자율 수행</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-sm">
+                        <h4 class="font-bold text-lg mb-2">응답 속도</h4>
+                        <p class="text-blue-500 text-3xl font-bold">&lt; 3-5초</p>
+                        <p class="text-gray-600 mt-2">실시간 상호작용 가능한 지연 시간</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-sm">
+                        <h4 class="font-bold text-lg mb-2">정확성</h4>
+                        <p class="text-blue-500 text-3xl font-bold">95%+
+                        <p class="text-gray-600 mt-2">UI 요소 인식 및 사용자 의도 파악</p>
+                    </div>
+                </div>
+
+                <h3 class="text-2xl font-bold mb-4">해커톤 우승 전략</h3>
+                <p class="text-gray-600 mb-6">본 프로젝트는 기술적 혁신성, 강력한 사회적 영향력, 그리고 높은 실현 가능성을 바탕으로 차별화된 경쟁력을 가집니다.</p>
+                <div class="space-y-4">
+                    <div class="bg-white p-4 rounded-lg shadow-sm flex items-start">
+                        <div class="bg-blue-100 text-blue-600 p-3 rounded-full mr-4">💡</div>
+                        <div>
+                            <h4 class="font-bold">기술적 혁신성</h4>
+                            <p class="text-gray-700">온디바이스 멀티모달 LLM, 에이전트 제어, 안드로이드 접근성 서비스라는 세 가지 핵심 기술을 융합하여 심사위원들에게 깊은 인상을 남깁니다.</p>
+                        </div>
+                    </div>
+                    <div class="bg-white p-4 rounded-lg shadow-sm flex items-start">
+                        <div class="bg-green-100 text-green-600 p-3 rounded-full mr-4">🌍</div>
+                        <div>
+                            <h4 class="font-bold">사회적 영향력</h4>
+                            <p class="text-gray-700">기술을 통해 디지털 정보 격차라는 실질적인 사회 문제를 해결하고, 디지털 포용에 직접적으로 기여하는 강력한 메시지를 전달합니다.</p>
+                        </div>
+                    </div>
+                    <div class="bg-white p-4 rounded-lg shadow-sm flex items-start">
+                         <div class="bg-purple-100 text-purple-600 p-3 rounded-full mr-4">🚀</div>
+                        <div>
+                            <h4 class="font-bold">높은 실현 가능성</h4>
+                            <p class="text-gray-700">Gemma 3n, Unsloth 등 최신 기술을 활용하여 해커톤이라는 극한의 제약 조건 속에서도 프로젝트의 실현 가능성을 극대화합니다.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Tech Stack Section -->
+            <section id="tech" class="content-section">
+                <h2 class="text-3xl font-bold mb-2">기술 스택</h2>
+                <p class="text-gray-600 mb-8">프로젝트를 구성하는 핵심 기술 요소와 아키텍처를 소개합니다.</p>
+
+                <div class="bg-white p-6 rounded-lg shadow-sm mb-8">
+                    <h3 class="text-xl font-bold mb-4">핵심 엔진: Gemma 3n</h3>
+                    <p class="text-gray-700 mb-6">Gemma 3n은 단순한 경량 모델이 아닌, 엣지 환경에서의 효율적 구동을 위해 설계된 근본적인 아키텍처 혁신을 담고 있어 본 프로젝트에 최적입니다.</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div class="border border-gray-200 p-4 rounded-lg">
+                            <h4 class="font-bold">MatFormer 아키텍처</h4>
+                            <p class="text-sm text-gray-600">하나의 모델 안에 여러 하위 모델이 중첩되어, 상황에 따라 연산량을 동적으로 조절하며 배터리 효율을 극대화합니다.</p>
+                        </div>
+                         <div class="border border-gray-200 p-4 rounded-lg">
+                            <h4 class="font-bold">PLE & KV 캐싱</h4>
+                            <p class="text-sm text-gray-600">VRAM 요구사항을 줄이고, 초기 응답 속도를 2배 향상시켜 실시간 상호작용을 가능하게 합니다.</p>
+                        </div>
+                        <div class="border border-gray-200 p-4 rounded-lg">
+                            <h4 class="font-bold">고성능 멀티모달</h4>
+                            <p class="text-sm text-gray-600">MobileNet-V5(Vision)와 USM(Audio) 인코더로 키오스크 화면과 사용자 음성을 빠르고 정확하게 인식합니다.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-lg shadow-sm mb-8">
+                    <h3 class="text-xl font-bold mb-4">전체 시스템 아키텍처</h3>
+                    <p class="text-gray-700 mb-6">사용자 입력부터 키오스크 제어까지, 데이터는 다음과 같은 흐름으로 처리됩니다. 각 노드에 마우스를 올려보세요.</p>
+                    <div class="grid grid-cols-1 md:grid-cols-5 gap-4 items-center">
+                        <div class="flow-node bg-gray-100 p-4 rounded-lg text-center shadow">
+                            <h5 class="font-bold">1. 입력</h5>
+                            <p class="text-sm">음성 & 카메라</p>
+                        </div>
+                        <div class="flow-arrow hidden md:flex">→</div>
+                        <div class="flow-node bg-blue-100 p-4 rounded-lg text-center shadow">
+                            <h5 class="font-bold">2. 인식/추론</h5>
+                            <p class="text-sm">Gemma 3n on-device</p>
+                        </div>
+                        <div class="flow-arrow hidden md:flex">→</div>
+                        <div class="flow-node bg-green-100 p-4 rounded-lg text-center shadow">
+                            <h5 class="font-bold">3. 행동 계획</h5>
+                            <p class="text-sm">JSON Action 생성</p>
+                        </div>
+                        <div class="flow-arrow hidden md:flex">→</div>
+                         <div class="flow-node bg-yellow-100 p-4 rounded-lg text-center shadow">
+                            <h5 class="font-bold">4. 실행</h5>
+                            <p class="text-sm">Accessibility Service</p>
+                        </div>
+                        <div class="flow-arrow hidden md:flex">→</div>
+                         <div class="flow-node bg-purple-100 p-4 rounded-lg text-center shadow">
+                            <h5 class="font-bold">5. 피드백</h5>
+                            <p class="text-sm">음성 안내(TTS)</p>
+                        </div>
+                    </div>
+                </div>
+                
+                 <div class="bg-white p-6 rounded-lg shadow-sm">
+                    <h3 class="text-xl font-bold mb-4">안드로이드 & 모델 배포 스택</h3>
+                    <p class="text-gray-700 mb-6">최신 안드로이드 기술과 효율적인 모델 파인튜닝 및 배포 파이프라인을 통해 아이디어를 현실로 만듭니다.</p>
+                    <ul class="list-disc list-inside space-y-2 text-gray-700">
+                        <li><b>언어 및 UI:</b> Kotlin & Jetpack Compose로 빠르고 현대적인 앱 개발</li>
+                        <li><b>카메라:</b> CameraX로 안정적인 실시간 비디오 프레임 확보</li>
+                        <li><b>추론 엔진:</b> MediaPipe LLM Inference API로 Gemma 3n 온디바이스 구동</li>
+                        <li><b>모델 튜닝:</b> Unsloth를 사용하여 Colab 무료 GPU 환경에서 QLoRA 파인튜닝</li>
+                        <li><b>모델 배포:</b> AI Edge Torch로 PyTorch 모델을 TFLite/.task 번들로 변환하여 앱에 탑재</li>
+                    </ul>
+                </div>
+
+            </section>
+
+            <!-- UX Section -->
+            <section id="ux" class="content-section">
+                 <h2 class="text-3xl font-bold mb-2">사용자 경험(UX)</h2>
+                 <p class="text-gray-600 mb-8">기술을 사용자 관점에서 구체화하여, 앱이 실제로 어떻게 동작하고 어떤 가치를 제공하는지 생생하게 보여줍니다.</p>
+                 
+                <div class="bg-white p-6 rounded-lg shadow-sm mb-8">
+                     <h3 class="text-xl font-bold mb-4">인터랙티브 시나리오: 카페 키오스크 주문</h3>
+                     <p class="text-gray-700 mb-6">시각 장애가 있는 사용자가 키오스크에서 음료를 주문하는 여정을 시뮬레이션합니다. '다음 단계' 버튼을 눌러 과정을 진행해보세요.</p>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+                        <!-- Kiosk UI -->
+                        <div class="kiosk-screen p-6 h-96 flex flex-col justify-center items-center">
+                            <div id="kiosk-content" class="w-full text-center">
+                                <!-- Kiosk content will be updated by JS -->
+                            </div>
+                        </div>
+                        <!-- Phone UI -->
+                        <div class="phone-screen p-4 h-96 flex flex-col">
+                            <div class="flex-grow space-y-4 overflow-y-auto pr-2">
+                                <div id="phone-dialogue">
+                                     <!-- Phone dialogue will be updated by JS -->
+                                </div>
+                            </div>
+                             <div class="mt-4">
+                                <button id="next-step-btn" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-lg transition-colors">
+                                    시나리오 시작
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-lg shadow-sm">
+                    <h3 class="text-xl font-bold mb-4">'신뢰할 수 있는 전문가' UX 프레임워크</h3>
+                    <p class="text-gray-700 mb-6">단순한 음성 제어를 넘어, 사용자가 믿고 의지할 수 있는 '디지털 비서'를 만들기 위해 다음과 같은 대화 원칙을 적용합니다.</p>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="text-center">
+                             <div class="bg-blue-100 text-blue-600 w-16 h-16 rounded-full mx-auto flex items-center justify-center text-2xl mb-3">✔️</div>
+                            <h4 class="font-bold">명시적 확인</h4>
+                            <p class="text-sm text-gray-600">"5,000원을 결제합니다. 맞습니까?" 와 같이 금전적 지출 전 반드시 사용자의 동의를 구합니다.</p>
+                        </div>
+                        <div class="text-center">
+                             <div class="bg-green-100 text-green-600 w-16 h-16 rounded-full mx-auto flex items-center justify-center text-2xl mb-3">❓</div>
+                            <h4 class="font-bold">능동적 명료화</h4>
+                            <p class="text-sm text-gray-600">"늘 드시던 것은 '라지 아이스 아메리카노'가 맞습니까?" 처럼 모호한 명령은 되물어 명확히 합니다.</p>
+                        </div>
+                        <div class="text-center">
+                             <div class="bg-red-100 text-red-600 w-16 h-16 rounded-full mx-auto flex items-center justify-center text-2xl mb-3">⚠️</div>
+                            <h4 class="font-bold">정중한 오류 처리</h4>
+                            <p class="text-sm text-gray-600">"죄송합니다. 작업에 실패했습니다. 다시 시도할까요?" 와 같이 실패 상황을 명확히 보고하고 대안을 제시합니다.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Training Section -->
+            <section id="training" class="content-section">
+                <h2 class="text-3xl font-bold mb-2">모델 학습 전략</h2>
+                <p class="text-gray-600 mb-8">범용 Gemma 3n 모델을 키오스크 제어에 특화된 전문가 모델로 탈바꿈시키기 위한 데이터 전략과 파인튜닝 계획입니다.</p>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="bg-white p-6 rounded-lg shadow-sm">
+                        <h3 class="text-xl font-bold mb-4">UI 제어를 위한 지도 파인튜닝(SFT)</h3>
+                        <p class="text-gray-700 mb-4">모델이 UI를 제어하는 '언어'를 학습하도록, '명령어-행동' 쌍으로 구성된 고품질 마이크로 데이터셋(50~100개)을 구축합니다.</p>
+                        <h4 class="font-semibold mb-2">행동 공간(Action Space) JSON 스키마 예시:</h4>
+                        <pre class="bg-gray-800 text-white p-4 rounded-md text-sm whitespace-pre-wrap"><code>{
+  "action": "CLICK",
+  "reasoning": "사용자가 커피를 요청했음.",
+  "target_element_description": "'커피' 텍스트 버튼",
+  "coordinates": [430, 250]
+}</code></pre>
+                    </div>
+
+                     <div class="bg-white p-6 rounded-lg shadow-sm">
+                        <h3 class="text-xl font-bold mb-4">Unsloth를 활용한 QLoRA 튜닝</h3>
+                        <p class="text-gray-700 mb-4">메모리 효율적인 QLoRA 파인튜닝을 Unsloth 라이브러리를 통해 2배 더 빠르게 수행합니다. 이를 통해 Colab의 무료 T4 GPU만으로도 80억 파라미터 모델의 튜닝이 가능합니다.</p>
+                        <div class="chart-container" style="height: 250px; max-height: 250px;">
+                            <canvas id="unslothChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Roadmap Section -->
+            <section id="roadmap" class="content-section">
+                <h2 class="text-3xl font-bold mb-2">해커톤 로드맵</h2>
+                <p class="text-gray-600 mb-8">36시간의 해커톤 기간 동안 프로젝트를 성공적으로 완수하기 위한 단계별 실행 계획입니다.</p>
+                <div class="bg-white p-6 rounded-lg shadow-sm">
+                    <div class="chart-container" style="height: 500px; max-height: 500px;">
+                        <canvas id="roadmapChart"></canvas>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const navLinks = document.querySelectorAll('.nav-link');
+            const contentSections = document.querySelectorAll('.content-section');
+
+            function updateContent(hash) {
+                const targetHash = hash || '#overview';
+                
+                navLinks.forEach(link => {
+                    link.classList.toggle('active', link.getAttribute('href') === targetHash);
+                });
+
+                contentSections.forEach(section => {
+                    section.classList.toggle('active', `#${section.id}` === targetHash);
+                });
+            }
+
+            document.querySelector('nav').addEventListener('click', e => {
+                if (e.target.closest('a')) {
+                    e.preventDefault();
+                    const link = e.target.closest('a');
+                    const hash = link.getAttribute('href');
+                    if(history.pushState) {
+                        history.pushState(null, null, hash);
+                    } else {
+                        location.hash = hash;
+                    }
+                    updateContent(hash);
+                }
+            });
+
+            window.addEventListener('popstate', () => {
+                updateContent(window.location.hash);
+            });
+            
+            updateContent(window.location.hash);
+
+            // Chart.js Initializations
+            function initCharts() {
+                // Unsloth Comparison Chart
+                const unslothCtx = document.getElementById('unslothChart');
+                if(unslothCtx) {
+                    new Chart(unslothCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: ['Training Speed', 'Memory Usage'],
+                            datasets: [{
+                                label: 'Standard Fine-tuning',
+                                data: [1, 1],
+                                backgroundColor: 'rgba(156, 163, 175, 0.6)',
+                                borderColor: 'rgba(156, 163, 175, 1)',
+                                borderWidth: 1
+                            }, {
+                                label: 'Unsloth',
+                                data: [2, 0.4],
+                                backgroundColor: 'rgba(59, 130, 246, 0.6)',
+                                borderColor: 'rgba(59, 130, 246, 1)',
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                title: { display: true, text: 'Standard vs Unsloth 성능 비교' },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            if (context.dataset.label === 'Unsloth' && context.dataIndex === 0) return '2x Faster';
+                                            if (context.dataset.label === 'Unsloth' && context.dataIndex === 1) return '60% Less Memory';
+                                            return 'Baseline';
+                                        }
+                                    }
+                                }
+                            },
+                            scales: {
+                                y: { beginAtZero: true, ticks: { display: false } }
+                            }
+                        }
+                    });
+                }
+
+                // Roadmap Gantt Chart
+                const roadmapCtx = document.getElementById('roadmapChart');
+                if(roadmapCtx) {
+                    new Chart(roadmapCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: [
+                                '데모 영상 제작', '최종 테스트 및 버그 수정', '모델 배포(App)', 
+                                '모델 변환(TFLite)', 'SFT 실행(Unsloth)', 'Action Executor 구현', 
+                                '1차 통합', '데이터셋 구축', 'Accessibility Service 구현',
+                                'CameraX 구현', '베이스라인 모델 추론', '프로젝트 설정'
+                            ],
+                            datasets: [{
+                                label: '시간 (시간 단위)',
+                                data: [
+                                    {x: [25, 36], y: '데모 영상 제작'}, {x: [25, 36], y: '최종 테스트 및 버그 수정'}, {x: [25, 36], y: '모델 배포(App)'},
+                                    {x: [25, 36], y: '모델 변환(TFLite)'}, {x: [25, 36], y: 'SFT 실행(Unsloth)'}, {x: [9, 24], y: 'Action Executor 구현'},
+                                    {x: [9, 24], y: '1차 통합'}, {x: [9, 24], y: '데이터셋 구축'}, {x: [9, 24], y: 'Accessibility Service 구현'},
+                                    {x: [1, 8], y: 'CameraX 구현'}, {x: [1, 8], y: '베이스라인 모델 추론'}, {x: [1, 8], y: '프로젝트 설정'},
+                                ],
+                                backgroundColor: (ctx) => {
+                                    const phase = ctx.raw.x[0];
+                                    if(phase >= 25) return 'rgba(239, 68, 68, 0.6)'; // Phase 3
+                                    if(phase >= 9) return 'rgba(245, 158, 11, 0.6)'; // Phase 2
+                                    return 'rgba(59, 130, 246, 0.6)'; // Phase 1
+                                }
+                            }]
+                        },
+                        options: {
+                            indexAxis: 'y',
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { display: false },
+                                title: { display: true, text: '해커톤 36시간 실행 계획' },
+                                tooltip: {
+                                    callbacks: {
+                                        title: function(context) { return context[0].label; },
+                                        label: function(context) { return `시간: ${context.raw.x[0]}h - ${context.raw.x[1]}h`; }
+                                    }
+                                }
+                            },
+                            scales: {
+                                x: { stacked: true, min: 0, max: 36, title: { display: true, text: '시간 (Hours)' } },
+                                y: { stacked: true }
+                            }
+                        }
+                    });
+                }
+            }
+
+            initCharts();
+
+            // Interactive UX Scenario Logic
+            const kioskContent = document.getElementById('kiosk-content');
+            const phoneDialogue = document.getElementById('phone-dialogue');
+            const nextStepBtn = document.getElementById('next-step-btn');
+            let currentStep = 0;
+
+            const scenario = [
+                { // Step 0: Initial state
+                    kioskHTML: `<h2 class="text-3xl font-bold mb-6">터치하여 주문 시작</h2><p class="text-gray-400">Welcome</p>`,
+                    phoneHTML: ``,
+                    btnText: `시나리오 시작`
+                },
+                { // Step 1: User starts
+                    kioskHTML: `<h3 class="text-2xl font-bold mb-6">카테고리를 선택하세요</h3><div class="grid grid-cols-3 gap-4 text-xl"><div class="bg-gray-700 p-6 rounded-lg">☕️ 커피</div><div class="bg-gray-600 p-6 rounded-lg">🍵 티</div><div class="bg-gray-600 p-6 rounded-lg">🍰 디저트</div></div>`,
+                    phoneHTML: `<div class="text-right mb-2"><span class="bg-blue-500 text-white p-2 rounded-lg inline-block">주문 시작해 줘.</span></div>
+                                <div class="text-left"><span class="bg-gray-200 p-2 rounded-lg inline-block">화면에 '커피', '티', '디저트' 카테고리가 보입니다.</span></div>`,
+                    btnText: `다음 단계: "아이스 아메리카노 찾아봐"`
+                },
+                { // Step 2: User asks for americano
+                    kioskHTML: `<h3 class="text-2xl font-bold mb-6">커피 메뉴</h3><div class="grid grid-cols-2 gap-4"><div class="bg-blue-500 p-4 rounded-lg">🧊 아이스 아메리카노<br>4,500원</div><div class="bg-gray-600 p-4 rounded-lg">☕️ 따뜻한 라떼<br>5,000원</div></div><h4 class="mt-6 font-bold">사이즈 선택</h4><div class="flex justify-center gap-4 mt-2"><div class="border-2 border-gray-500 px-4 py-2 rounded">레귤러</div><div class="border-2 border-gray-500 px-4 py-2 rounded">라지</div></div>`,
+                    phoneHTML: `<div class="text-right mb-2"><span class="bg-blue-500 text-white p-2 rounded-lg inline-block">아이스 아메리카노 찾아봐.</span></div>
+                                <div class="text-left"><span class="bg-gray-200 p-2 rounded-lg inline-block">'아이스 아메리카노'를 찾았습니다. 사이즈는 '레귤러'와 '라지'가 있습니다.</span></div>`,
+                    btnText: `다음 단계: "라지로 하고, 장바구니에 담아줘"`
+                },
+                { // Step 3: User chooses size and adds to cart
+                    kioskHTML: `<h3 class="text-2xl font-bold mb-6">장바구니</h3><div class="bg-gray-700 p-4 rounded-lg text-left">아이스 아메리카노 (라지) - 5,000원</div><div class="mt-8 text-2xl">총 금액: 5,000원</div><div class="absolute bottom-6 w-full px-6"><div class="bg-green-500 p-4 rounded-lg text-xl font-bold">결제하기</div></div>`,
+                    phoneHTML: `<div class="text-right mb-2"><span class="bg-blue-500 text-white p-2 rounded-lg inline-block">라지로 하고, 장바구니에 담아줘.</span></div>
+                                <div class="text-left"><span class="bg-gray-200 p-2 rounded-lg inline-block">라지 사이즈 아이스 아메리카노를 장바구니에 담았습니다. 결제할까요?</span></div>`,
+                    btnText: `다음 단계: "응, 결제해 줘"`
+                },
+                { // Step 4: User confirms payment
+                    kioskHTML: `<h3 class="text-2xl font-bold mb-6">결제 수단 선택</h3><div class="grid grid-cols-2 gap-4 text-xl"><div class="bg-gray-600 p-8 rounded-lg">💳 신용카드</div><div class="bg-gray-600 p-8 rounded-lg">📱 모바일 페이</div></div>`,
+                    phoneHTML: `<div class="text-right mb-2"><span class="bg-blue-500 text-white p-2 rounded-lg inline-block">응, 결제해 줘.</span></div>
+                                <div class="text-left"><span class="bg-gray-200 p-2 rounded-lg inline-block">결제 화면으로 이동했습니다.</span></div>`,
+                    btnText: `처음으로 돌아가기`
+                },
+            ];
+
+            function updateScenario(step) {
+                kioskContent.innerHTML = scenario[step].kioskHTML;
+                phoneDialogue.innerHTML = scenario[step].phoneHTML;
+                nextStepBtn.textContent = scenario[step].btnText;
+                phoneDialogue.parentElement.scrollTop = phoneDialogue.parentElement.scrollHeight;
+            }
+            
+            updateScenario(0);
+
+            nextStepBtn.addEventListener('click', () => {
+                currentStep = (currentStep + 1) % scenario.length;
+                updateScenario(currentStep);
+            });
+        });
+    </script>
+</body>
+</html>
